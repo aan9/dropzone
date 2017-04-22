@@ -1,0 +1,9 @@
+Model
+-Edit migration
+-Migrate
+
+Controller
+-Edit route
+
+View
+-buat folder
