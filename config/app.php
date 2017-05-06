@@ -177,6 +177,15 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        Collective\Html\HtmlServiceProvider::class,
+        Laracasts\Flash\FlashServiceProvider::class,
+
+        //SweetAlert
+        UxWeb\SweetAlert\SweetAlertServiceProvider::class,
+
+        //Laratrust
+        Laratrust\LaratrustServiceProvider::class,
+
     ],
 
     /*
@@ -225,6 +234,15 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
+
+        'Form' => Collective\Html\FormFacade::class,
+        'Html' => Collective\Html\HtmlFacade::class,
+
+        //SweetAlert
+        'Alert' => UxWeb\SweetAlert\SweetAlert::class,
+
+        //Laratrust
+        'Laratrust'   => Laratrust\LaratrustFacade::class,
 
     ],
 

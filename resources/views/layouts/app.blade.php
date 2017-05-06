@@ -12,6 +12,8 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <!-- SweetAlert CSS -->
+    <link href="{{ asset('css/sweetalert.css') }}" rel="stylesheet">
 
     <!-- Scripts -->
     <script>
@@ -43,7 +45,13 @@
                 <div class="collapse navbar-collapse" id="app-navbar-collapse">
                     <!-- Left Side Of Navbar -->
                     <ul class="nav navbar-nav">
-                        <li><a href="{{ route('products.index') }}">Manage Products</a></li>
+                        <li><a href="{{ route('products.index') }}">Home</a></li>
+                        @role('members')
+                        <li><a href="{{ route('my_products') }}">My Products</a></li>
+                        @endrole
+                        @role('admin')
+                        <li><a href="{{ route('admin.products.index') }}">Manage Admin Products</a></li>
+                        @endrole
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -78,10 +86,22 @@
             </div>
         </nav>
 
+        <!-- paparkan success/error/warning/info message -->
+        <div class="container-fluid">
+            @include('flash::message')
+        </div>
+
         @yield('content')
     </div>
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
+    <!-- SweetAlert Js -->
+    <script src="{{ asset('js/sweetalert.min.js') }}"></script>
+
+    @include('sweet::alert')
+
 </body>
 </html>
+
+@yield('script')

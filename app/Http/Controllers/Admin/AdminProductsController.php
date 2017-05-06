@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Product; //arahan: gunakan model product
 use App\Brand;
@@ -11,17 +12,17 @@ use App\Category;
 use App\Subcategory;
 use App\Http\Requests\CreateProductRequest;
 use Alert;
+use App\Http\Middleware\CheckUserRole;
 
-class ProductsController extends Controller
+class AdminProductsController extends Controller
 {
     public function __construct() {
 
         //check dah login ke belum
-        $this->middleware('auth')->except('index','getStateAreas','getCategorySubcategories','show');
+        $this->middleware('auth');
 
-        $this->middleware('check_user_role:members')->except('index','getStateAreas','getCategorySubcategories','show');
-
-        $this->middleware('check_product_ownership')->only('destroy','edit','update');
+        //check user role
+        $this->middleware('check_user_role:admin');
         
     }
     /**
@@ -88,7 +89,7 @@ class ProductsController extends Controller
             $search_subcategory = $request->search_subcategory;
 
             $products = $products->where(function ($query) use ($search_subcategory) {
-                $query->where('subcategory_id',$search_subcategory);
+                $query->where('subcategory_id',$search_sub);
             });            
         } 
 
@@ -105,7 +106,7 @@ class ProductsController extends Controller
         $states = State::pluck('state_name','id');
         $categories = Category::pluck('category_name','id');
 
-        return view('products.index', compact('products','brands','categories','states'));
+        return view('admin.products.index', compact('products','brands','categories','states'));
         // compact: amik variable hntr ke view
     }
 
@@ -121,7 +122,7 @@ class ProductsController extends Controller
         $states = State::pluck('state_name','id');
         $categories = Category::pluck('category_name','id');
 
-        return view('products.create', compact('brands','states','categories'));
+        return view('admin.products.create', compact('brands','states','categories'));
     }
 
     /**
@@ -163,7 +164,7 @@ class ProductsController extends Controller
 
         //kembali ke senarai product
 
-        return redirect()->route('my_products');
+        return redirect()->route('admin.products.index');
     }
 
     /**
@@ -174,19 +175,7 @@ class ProductsController extends Controller
      */
     public function show($id)
     {
-        //dapatkan maklumat produk sedia ada
-        $product = Product::find($id);
-
-        $brands = Brand::pluck('brand_name','id');
-        $states = State::pluck('state_name','id');
-        $categories = Category::pluck('category_name','id');
-
-        //get selected area based on state to show form
-        $areas = $this->getStateAreas($product->area->state_id);
-
-        $subcategories = $this->getCategorySubcategories($product->subcategory->category_id);
-
-        return view('products.show', compact('brands','states','categories','product','areas','subcategories'));
+        //
     }
 
     /**
@@ -209,7 +198,7 @@ class ProductsController extends Controller
 
         $subcategories = $this->getCategorySubcategories($product->subcategory->category_id);
 
-        return view('products.edit', compact('brands','states','categories','product','areas','subcategories'));
+        return view('admin.products.edit', compact('brands','states','categories','product','areas','subcategories'));
     }
 
     /**
@@ -250,7 +239,7 @@ class ProductsController extends Controller
 
         //kembali ke senarai product
 
-        return redirect()->route('products.edit',$product->id);
+        return redirect()->route('admin.products.edit',$product->id);
     }
 
     /**
@@ -272,7 +261,7 @@ class ProductsController extends Controller
         Alert::success('Successfully Deleted!');
         //return Redirect::home();
 
-        return redirect()->route('products.index');
+        return redirect()->route('admin.products.index');
     }
 
     public function getStateAreas($state_id)
@@ -290,93 +279,4 @@ class ProductsController extends Controller
 
         return $subcategories;
     }
-
-    //show current user logged in product only
-
-    public function my_products(Request $request)
-    {
-
-        $user = auth()->user();
-
-        //eager loading relationship to prevent multiple db queries
-        //dptkan current user products
-
-        $products = $user->products()->with('brand','subcategory','area','user');
-
-        if (!empty($request->search_anything)) {
-
-            $search_anything = $request->search_anything;
-
-            $products =$products->where(function($query) use ($search_anything) {
-                $query->orWhere('product_name','like','%'.$search_anything."%")
-                    ->orWhere('product_description','like','%'.$search_anything."%");
-            });
-        }
-
-        //search by state
-        if (!empty($request->search_category)) {
-
-            $search_category = $request->search_category;
-
-            $products = $products->whereHas('subcategory', function ($query) use ($search_category) {
-                $query->where('category_id',$search_category);
-            });            
-        }
-
-        //search by category
-        if (!empty($request->search_state)) {
-
-            $search_state = $request->search_state;
-
-            $products = $products->whereHas('area', function ($query) use ($search_state) {
-                $query->where('state_id',$search_state);
-            });            
-        }
-
-        //search by brand
-        if (!empty($request->search_brand)) {
-
-            $search_brand = $request->search_brand;
-
-            $products = $products->where(function ($query) use ($search_brand) {
-                $query->where('brand_id',$search_brand);
-            });            
-        }
-
-        if (!empty($request->search_area)) {
-
-            $search_area = $request->search_area;
-
-            $products = $products->where(function ($query) use ($search_area) {
-                $query->where('area_id',$search_area);
-            });            
-        }
-
-        if (!empty($request->search_subcategory)) {
-
-            $search_subcategory = $request->search_subcategory;
-
-            $products = $products->where(function ($query) use ($search_subcategory) {
-                $query->where('subcategory_id',$search_subcategory);
-            });            
-        } 
-
-        //sort by latest product
-        $products = $products->orderBy('id','desc');
-
-        //paginate the data
-        $products = $products->paginate(5);
-
-
-        //load additional data for searching
-
-        $brands = Brand::pluck('brand_name','id');
-        $states = State::pluck('state_name','id');
-        $categories = Category::pluck('category_name','id');
-
-        return view('products.my_products', compact('products','brands','categories','states'));
-        // compact: amik variable hntr ke view
-    }
 }
-
-

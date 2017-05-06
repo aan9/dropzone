@@ -7,3 +7,28 @@ Controller
 
 View
 -buat folder
+
+---------------GIT---------------------
+masuk dalam folder
+-cd /bla/bla
+
+git kan folder
+-git init
+
+add folder
+-git add .
+
+commit folder
+-git commit -a
+-klik 'i'
+-taip msj
+-klik esc,:,wq
+
+buka github.com
+-create project
+-create repo
+
+upload
+-push
+-git remote add origin 'address repo'
+-git push -u origin master
